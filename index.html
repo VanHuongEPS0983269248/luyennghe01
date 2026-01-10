@@ -5,15 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EPS-TOPIK 2024 - Luyện Nghe</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; background-color: #f0f4f8; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; text-align: center; padding: 20px; background-color: #f0f4f8; }
         .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); display: inline-block; max-width: 500px; width: 100%; text-align: left; }
         .progress { font-weight: bold; color: #007bff; margin-bottom: 15px; text-align: center; }
-        button { display: block; width: 100%; margin: 10px 0; padding: 14px; font-size: 16px; cursor: pointer; border: 2px solid #eee; border-radius: 12px; transition: 0.3s; background: white; text-align: left; }
+        button { display: block; width: 100%; margin: 10px 0; padding: 14px; font-size: 16px; cursor: pointer; border: 2px solid #eee; border-radius: 12px; transition: 0.3s; background: white; text-align: left; -webkit-tap-highlight-color: transparent; }
         button:hover:not(:disabled) { background-color: #f1faff; border-color: #007bff; }
         .btn-listen { background-color: #28a745; color: white; font-weight: bold; border: none; text-align: center; font-size: 18px; }
         .btn-next { background-color: #007bff; color: white; font-weight: bold; border: none; text-align: center; display: none; margin-top: 20px; }
         #explanation { display: none; padding: 15px; border-radius: 10px; margin-top: 15px; line-height: 1.6; background-color: #fff3cd; }
-        .script-text { font-weight: bold; color: #007bff; display: block; margin-bottom: 5px; }
         #result-screen { display: none; text-align: center; }
         .score { font-size: 60px; color: #2ecc71; font-weight: bold; }
     </style>
@@ -21,33 +20,37 @@
 <body>
 <div class="container" id="quiz-screen">
     <div class="progress">Câu hỏi: <span id="current-pos">1</span>/10</div>
-    <button class="btn-listen" id="listen-btn" onclick="speak()">🔊 Nghe câu hỏi (Chậm 0.7)</button>
+    <button class="btn-listen" id="listen-btn" onclick="speak()">🔊 Nghe câu hỏi (Tốc độ 0.7)</button>
     <div id="options" style="margin-top: 20px;"></div>
     <div id="explanation">
-        <span class="script-text" id="script-display"></span>
+        <b style="color:#007bff">Câu vừa nghe:</b> <span id="script-display"></span><br>
         <div id="exp-content"></div>
         <button class="btn-next" id="next-btn" onclick="nextQuestion()">Tiếp theo ➔</button>
     </div>
 </div>
+
 <div class="container" id="result-screen">
-    <h2>Kết quả!</h2>
+    <h2>Hoàn thành!</h2>
     <div class="score" id="total-score">0/10</div>
     <button onclick="location.reload()" style="background: #34495e; color: white; text-align: center;">Làm lại</button>
 </div>
+
 <script>
     const questions = [
-        { q_audio: "이름이, 무엇입니까?", q_display: "이름이 무엇입니까?", a: ["리한입니다", "한국입니다", "회사원입니다", "반가워요"], correct: 0, exp: "Hỏi tên. Đáp án 1: 'Tôi là Rihan'." },
-        { q_audio: "지금, 뭐 해요?", q_display: "지금 뭐 해요?", a: ["어제 했어요", "요리하고 있어요", "요리가 맛있어요", "식당에 없어요"], correct: 1, exp: "Hỏi hành động bây giờ. Đáp án 2: 'Đang nấu ăn'." },
-        { q_audio: "오늘, 날씨가, 어때요?", q_display: "오늘 날씨가 어때요?", a: ["날씨가 좋아요", "내일 갈 거예요", "맑고 따뜻해요", "어제는 추웠어요"], correct: 2, exp: "Hỏi thời tiết hôm nay. Đáp án 3: 'Trong xanh và ấm áp'." },
-        { q_audio: "식당이, 어디에 있어요?", q_display: "식당이 어디에 있어요?", a: ["비빔밥이 있어요", "저기 건물 뒤에 있어요", "오늘 문을 열어요", "친구하고 가요"], correct: 1, exp: "Hỏi nơi chốn (어디). Đáp án 2: 'Ở đằng sau tòa nhà kia'." },
-        { q_audio: "사과 세 개 주세요, 얼마예요?", q_display: "사과 세 개 주세요. 얼마예요?", a: ["세 개 있어요", "사과가 맛있어요", "모두 삼천 원입니다", "여기에서 드세요"], correct: 2, exp: "Hỏi giá tiền. Đáp án 3: 'Tất cả là 3,000 Won'." },
-        { q_audio: "어제, 무엇을 했어요?", q_display: "어제 무엇을 했어요?", a: ["공원에서 산책했어요", "지금 운동해요", "내일 친구를 만나요", "영화가 재미있어요"], correct: 0, exp: "Hỏi quá khứ. Đáp án 1: 'Đã đi dạo ở công viên'." },
-        { q_audio: "생일이, 언제예요?", q_display: "생일이 언제예요?", a: ["제 동생 생일이에요", "시월 십오일이에요", "집에서 파티를 해요", "친구를 초대했어요"], correct: 1, exp: "Hỏi thời gian (언제). Đáp án 2: 'Ngày 15 tháng 10'." },
-        { q_audio: "주말에, 보통, 뭐 해요?", q_display: "주말에 보통 뭐 해요?", a: ["지난 주말에 갔어요", "집에서 푹 쉬어요", "토요일이 좋아요", "월요일에 출근해요"], correct: 1, exp: "Hỏi thói quen cuối tuần. Đáp án 2: 'Nghỉ ngơi ở nhà'." },
-        { q_audio: "실례지만, 나이가, 어떻게 되세요?", q_display: "실례지만, 나이가 어떻게 되세요?", a: ["서른 살이에요", "이름이 아니에요", "학생이 아니에요", "제 친구예요"], correct: 0, exp: "Hỏi tuổi lịch sự. Đáp án 1: '30 tuổi'." },
-        { q_audio: "한국에, 왜 왔어요?", q_display: "한국에 왜 왔어요?", a: ["비행기로 왔어요", "작년 10월에 왔어요", "일하러 왔어요", "한국 사람이 아니에요"], correct: 2, exp: "Hỏi lý do (왜). Đáp án 3: 'Đến để làm việc'." }
+        { q: "이름이, 무엇입니까?", a: ["리한입니다", "한국입니다", "회사원입니다", "반가워요"], correct: 0, exp: "Hỏi tên. Đáp án 1: Tôi là Rihan." },
+        { q: "지금, 뭐 해요?", a: ["어제 했어요", "요리하고 있어요", "요리가 맛있어요", "식당에 없어요"], correct: 1, exp: "Hỏi hành động bây giờ. Đáp án 2: Đang nấu ăn." },
+        { q: "오늘, 날씨가, 어때요?", a: ["날씨가 좋아요", "내일 갈 거예요", "맑고 따뜻해요", "어제는 추웠어요"], correct: 2, exp: "Hỏi thời tiết. Đáp án 3: Trong xanh và ấm áp." },
+        { q: "식당이, 어디에 있어요?", a: ["비빔밥이 있어요", "저기 건물 뒤에 있어요", "오늘 문을 열어요", "친구하고 가요"], correct: 1, exp: "Hỏi nơi chốn. Đáp án 2: Ở đằng sau tòa nhà." },
+        { q: "사과 세 개 주세요, 얼마예요?", a: ["세 개 있어요", "사과가 맛있어요", "모두 삼천 원입니다", "여기에서 드세요"], correct: 2, exp: "Hỏi giá tiền. Đáp án 3: Tất cả 3,000 Won." },
+        { q: "어제, 무엇을 했어요?", a: ["공원에서 산책했어요", "지금 운동해요", "내일 친구를 만나요", "영화가 재미있어요"], correct: 0, exp: "Hỏi quá khứ. Đáp án 1: Đã đi dạo công viên." },
+        { q: "생일이, 언제예요?", a: ["제 동생 생일이에요", "시월 십오일이에요", "집에서 파티를 해요", "친구를 초대했어요"], correct: 1, exp: "Hỏi thời gian. Đáp án 2: Ngày 15 tháng 10." },
+        { q: "주말에, 보통, 뭐 해요?", a: ["지난 주말에 갔어요", "집에서 푹 쉬어요", "토요일이 좋아요", "월요일에 출근해요"], correct: 1, exp: "Hỏi thói quen. Đáp án 2: Nghỉ ngơi ở nhà." },
+        { q: "실례지만, 나이가, 어떻게 되세요?", a: ["서른 살이에요", "이름이 아니에요", "학생이 아니에요", "제 친구예요"], correct: 0, exp: "Hỏi tuổi lịch sự. Đáp án 1: 30 tuổi." },
+        { q: "한국에, 왜 왔어요?", a: ["비행기로 왔어요", "작년 10월에 왔어요", "일하러 왔어요", "한국 사람이 아니에요"], correct: 2, exp: "Hỏi lý do. Đáp án 3: Đến để làm việc." }
     ];
+
     let currentIdx = 0, score = 0, answered = false;
+
     function loadQuestion() {
         answered = false;
         document.getElementById('current-pos').innerText = currentIdx + 1;
@@ -58,43 +61,53 @@
         questions[currentIdx].a.forEach((ans, index) => {
             const btn = document.createElement('button');
             btn.innerText = (index + 1) + ". " + ans;
-            btn.id = "opt-" + index;
             btn.onclick = () => checkAnswer(index);
             optionsDiv.appendChild(btn);
         });
     }
+
     function speak() {
-        const utterance = new SpeechSynthesisUtterance(questions[currentIdx].q_audio);
-        utterance.lang = 'ko-KR'; utterance.rate = 0.7;
+        window.speechSynthesis.cancel(); // Dừng các giọng đọc cũ
+        const utterance = new SpeechSynthesisUtterance(questions[currentIdx].q);
+        utterance.lang = 'ko-KR'; // Ép ngôn ngữ tiếng Hàn
+        utterance.rate = 0.7; // Tốc độ chậm
+        
+        // Tìm giọng đọc tiếng Hàn chuẩn nhất trên thiết bị
+        const voices = window.speechSynthesis.getVoices();
+        const koVoice = voices.find(v => v.lang.includes('ko'));
+        if (koVoice) utterance.voice = koVoice;
+
         window.speechSynthesis.speak(utterance);
     }
+
     function checkAnswer(selected) {
         if (answered) return; answered = true;
         const correct = questions[currentIdx].correct;
-        const expDiv = document.getElementById('explanation');
-        document.getElementById('script-display').innerText = "Câu hỏi: " + questions[currentIdx].q_display;
-        expDiv.style.display = 'block'; document.getElementById('next-btn').style.display = 'block';
+        document.getElementById('script-display').innerText = questions[currentIdx].q.replace(/,/g, "");
+        document.getElementById('explanation').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+        
         if (selected === correct) {
             score++;
-            document.getElementById('exp-content').innerHTML = "<b>✅ Đúng!</b><br>" + questions[currentIdx].exp;
-            document.getElementById('opt-'+selected).style.background = "#d4edda";
+            document.getElementById('exp-content').innerHTML = "✅ <b>Đúng!</b> " + questions[currentIdx].exp;
         } else {
-            document.getElementById('exp-content').innerHTML = "<b>❌ Sai!</b><br>" + questions[currentIdx].exp;
-            document.getElementById('opt-'+selected).style.background = "#f8d7da";
-            document.getElementById('opt-'+correct).style.border = "2px solid #28a745";
+            document.getElementById('exp-content').innerHTML = "❌ <b>Sai!</b> " + questions[currentIdx].exp;
         }
         document.querySelectorAll('#options button').forEach(b => b.disabled = true);
     }
+
     function nextQuestion() {
         currentIdx++;
         if (currentIdx < questions.length) loadQuestion();
-        else showResult();
+        else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('total-score').innerText = score + "/10";
+        }
     }
-    function showResult() {
-        document.getElementById('quiz-screen').style.display = 'none';
-        document.getElementById('result-screen').style.display = 'inline-block';
-        document.getElementById('total-score').innerText = score + "/10";
-    }
+
+    // Kích hoạt nạp giọng nói cho một số trình duyệt di động
+    window.speechSynthesis.getVoices();
     loadQuestion();
 </script>
 </body>
