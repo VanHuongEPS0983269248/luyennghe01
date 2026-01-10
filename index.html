@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EPS-TOPIK Luyện Nghe</title>
     <style>
-        body { font-family: -apple-system, sans-serif; text-align: center; padding: 20px; background-color: #f4f7f9; }
-        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block; max-width: 450px; width: 100%; text-align: left; }
-        .progress { color: #007bff; font-weight: bold; text-align: center; margin-bottom: 10px; }
-        button { display: block; width: 100%; margin: 10px 0; padding: 15px; font-size: 16px; border-radius: 12px; border: 1px solid #ddd; background: #fff; cursor: pointer; text-align: left; }
-        .btn-listen { background: #28a745; color: white; border: none; text-align: center; font-weight: bold; }
-        #explanation { display: none; margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 10px; }
-        .btn-next { background: #007bff; color: white; border: none; text-align: center; display: none; margin-top: 10px; }
+        body { font-family: -apple-system, system-ui, sans-serif; text-align: center; padding: 20px; background-color: #f0f4f8; }
+        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); display: inline-block; max-width: 450px; width: 100%; text-align: left; }
+        button { display: block; width: 100%; margin: 10px 0; padding: 15px; font-size: 16px; border-radius: 12px; border: 1px solid #ddd; background: #fff; cursor: pointer; transition: 0.2s; }
+        .btn-listen { background: #28a745; color: white; border: none; font-weight: bold; font-size: 18px; text-align: center; }
+        .btn-listen:active { background: #218838; }
+        #explanation { display: none; margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 10px; border: 1px solid #ffeeba; }
+        .btn-next { background: #007bff; color: white; border: none; display: none; margin-top: 10px; padding: 12px; border-radius: 10px; width: 100%; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="progress">Câu hỏi: <span id="pos">1</span>/10</div>
-    <button class="btn-listen" onclick="playAudio()">🔊 Nghe câu hỏi (Giọng chuẩn)</button>
+    <div style="text-align:center; font-weight:bold; color:#007bff; margin-bottom:10px;">Câu hỏi: <span id="pos">1</span>/10</div>
+    <button class="btn-listen" onclick="handleSpeak()">🔊 Bấm để nghe câu hỏi</button>
     <div id="options"></div>
     <div id="explanation">
-        <b style="color:#007bff">Nội dung nghe:</b> <div id="script"></div>
+        <b style="color:#007bff">Nội dung nghe:</b> <div id="script" style="font-weight:bold; margin: 5px 0;"></div>
         <div id="desc"></div>
         <button class="btn-next" id="next" onclick="nextQ()">Câu tiếp theo ➔</button>
     </div>
@@ -28,26 +28,38 @@
 
 <script>
     const data = [
-        { q: "이름이 무엇입니까?", a: ["리한입니다", "한국입니다", "회사원입니다", "반가워요"], c: 0, e: "Hỏi tên: Đáp án 1." },
-        { q: "지금 뭐 해요?", a: ["어제 했어요", "요리하고 있어요", "요리가 맛있어요", "식당에 없어요"], c: 1, e: "Hỏi hành động: Đáp án 2." },
-        { q: "오늘 날씨가 어때요?", a: ["날씨가 좋아요", "내일 갈 거예요", "맑고 따뜻해요", "어제는 추웠어요"], c: 2, e: "Hỏi thời tiết: Đáp án 3." },
-        { q: "식당이 어디에 있어요?", a: ["비빔밥이 있어요", "저기 건물 뒤에 있어요", "오늘 문을 열어요", "친구하고 가요"], c: 1, e: "Hỏi nơi chốn: Đáp án 2." },
-        { q: "사과 세 개 주세요. 얼마예요?", a: ["세 개 있어요", "사과가 맛있어요", "모두 삼천 원입니다", "여기에서 드세요"], c: 2, e: "Hỏi giá tiền: Đáp án 3." },
-        { q: "어제 무엇을 했어요?", a: ["공원에서 산책했어요", "지금 운동해요", "내일 친구를 만나요", "영화가 재미있어요"], c: 0, e: "Hỏi quá khứ: Đáp án 1." },
-        { q: "생일이 언제예요?", a: ["제 동생 생일이에요", "시월 십오일이에요", "집에서 파티를 해요", "친구를 초대했어요"], c: 1, e: "Hỏi thời gian: Đáp án 2." },
-        { q: "주말에 보통 뭐 해요?", a: ["지난 주말에 갔어요", "집에서 푹 쉬어요", "토요일이 좋아요", "월요일에 출근해요"], c: 1, e: "Hỏi thói quen: Đáp án 2." },
-        { q: "실례지만 나이가 어떻게 되세요?", a: ["서른 살이에요", "이름이 아니에요", "학생이 아니에요", "제 친구예요"], c: 0, e: "Hỏi tuổi: Đáp án 1." },
-        { q: "한국에 왜 왔어요?", a: ["비행기로 왔어요", "작년 10월 e 왔어요", "일하러 왔어요", "한국 사람이 아니에요"], c: 2, e: "Hỏi lý do: Đáp án 3." }
+        { q: "이름이 무엇입니까?", a: ["리한입니다", "한국입니다", "회사원입니다", "반가워요"], c: 0, e: "Đáp án 1: Tôi là Rihan." },
+        { q: "지금 뭐 해요?", a: ["어제 했어요", "요리하고 있어요", "요리가 맛있어요", "식당에 없어요"], c: 1, e: "Đáp án 2: Đang nấu ăn." },
+        { q: "오늘 날씨가 어때요?", a: ["날씨가 좋아요", "내일 갈 거예요", "맑고 따뜻해요", "어제는 추웠어요"], c: 2, e: "Đáp án 3: Trong xanh và ấm áp." },
+        { q: "식당이 어디에 있어요?", a: ["비빔밥이 있어요", "저기 건물 뒤에 있어요", "오늘 문을 열어요", "친구하고 가요"], c: 1, e: "Đáp án 2: Ở đằng sau tòa nhà." },
+        { q: "사과 세 개 주세요. 얼마예요?", a: ["세 개 있어요", "사과가 맛있어요", "모두 삼천 원입니다", "여기에서 드세요"], c: 2, e: "Đáp án 3: Tất cả 3,000 Won." },
+        { q: "어제 무엇을 했어요?", a: ["공원에서 산책했어요", "지금 운동해요", "내일 친구를 만나요", "영화가 재미있어요"], c: 0, e: "Đáp án 1: Đã đi dạo công viên." },
+        { q: "생일이 언제예요?", a: ["제 동생 생일이에요", "시월 십오일이에요", "집에서 파티를 해요", "친구를 초대했어요"], c: 1, e: "Đáp án 2: Ngày 15 tháng 10." },
+        { q: "주말에 보통 뭐 해요?", a: ["지난 주말에 갔어요", "집에서 푹 쉬어요", "토요일이 좋아요", "월요일에 출근해요"], c: 1, e: "Đáp án 2: Nghỉ ngơi ở nhà." },
+        { q: "실례지만 나이가 어떻게 되세요?", a: ["서른 살이에요", "이름이 아니에요", "학생이 아니에요", "제 친구예요"], c: 0, e: "Đáp án 1: 30 tuổi." },
+        { q: "한국에 왜 왔어요?", a: ["비행기로 왔어요", "작년 10월에 왔어요", "일하러 왔어요", "한국 사람이 아니에요"], c: 2, e: "Đáp án 3: Đến để làm việc." }
     ];
 
     let idx = 0, answered = false;
 
-    function playAudio() {
-        const text = encodeURIComponent(data[idx].q);
-        // Sử dụng Proxy để tránh lỗi trình duyệt chặn âm thanh
-        const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${text}&tl=ko&client=tw-ob`;
-        const audio = new Audio(url);
-        audio.play();
+    function handleSpeak() {
+        // Chống hiện tượng bị chặn âm thanh trên Chrome/Safari
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance();
+            msg.text = data[idx].q;
+            msg.lang = 'ko-KR';
+            msg.rate = 0.8; // Tốc độ vừa phải
+            
+            // Tìm giọng nữ tiếng Hàn
+            const voices = window.speechSynthesis.getVoices();
+            const femaleVoice = voices.find(v => v.lang.includes('ko') && (v.name.includes('Sora') || v.name.includes('Google') || v.name.includes('Yuna')));
+            if (femaleVoice) msg.voice = femaleVoice;
+
+            window.speechSynthesis.speak(msg);
+        } else {
+            alert("Trình duyệt của bạn quá cũ, vui lòng cập nhật Chrome!");
+        }
     }
 
     function load() {
@@ -67,6 +79,7 @@
                 document.getElementById('explanation').style.display = 'block';
                 document.getElementById('next').style.display = 'block';
                 b.style.background = (i === data[idx].c) ? "#d4edda" : "#f8d7da";
+                b.style.borderColor = (i === data[idx].c) ? "#28a745" : "#dc3545";
             };
             opt.appendChild(b);
         });
@@ -75,8 +88,11 @@
     function nextQ() {
         idx++;
         if(idx < data.length) load();
-        else alert("Bạn đã hoàn thành bài tập!");
+        else alert("Hoàn thành bài luyện nghe!");
     }
+
+    // Kích hoạt nạp giọng nói cho hệ thống
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
     load();
 </script>
 </body>
