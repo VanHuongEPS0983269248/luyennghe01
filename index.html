@@ -56,13 +56,29 @@
 
     let currentIdx = 0, score = 0, answered = false;
 
+    function loadQuestion() {
+        answered = false;
+        document.getElementById('current-pos').innerText = currentIdx + 1;
+        document.getElementById('explanation').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = "";
+        
+        questions[currentIdx].a.forEach((ans, index) => {
+            const btn = document.createElement('button');
+            btn.innerText = (index + 1) + ". " + ans;
+            btn.id = "opt-" + index;
+            btn.onclick = () => checkAnswer(index);
+            optionsDiv.appendChild(btn);
+        });
+    }
+
     function speak() {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(questions[currentIdx].q_audio);
         utterance.lang = 'ko-KR';
-        utterance.rate = 0.9; // Tốc độ bình thường
+        utterance.rate = 0.7;
 
-        // Ưu tiên chọn giọng nữ
         const voices = window.speechSynthesis.getVoices();
         let selectedVoice = voices.find(v => (v.lang.includes('ko') && v.name.includes('Google')) || (v.lang.includes('ko') && v.name.includes('Female')));
         if (!selectedVoice) selectedVoice = voices.find(v => v.lang.includes('ko'));
@@ -80,6 +96,35 @@
         document.getElementById('explanation').style.display = 'block';
         document.getElementById('next-btn').style.display = 'block';
 
+        const buttons = document.querySelectorAll('#options button');
+        buttons.forEach(b => b.disabled = true);
+
         if (selected === correct) {
             score++;
-            document.getElementById('exp
+            document.getElementById('exp-content').innerHTML = "<b>✅ Chính xác!</b><br>" + questions[currentIdx].exp;
+            document.getElementById('opt-'+selected).style.background = "#d4edda";
+            document.getElementById('opt-'+selected).style.borderColor = "#28a745";
+        } else {
+            document.getElementById('exp-content').innerHTML = "<b>❌ Chưa đúng!</b><br>" + questions[currentIdx].exp;
+            document.getElementById('opt-'+selected).style.background = "#f8d7da";
+            document.getElementById('opt-'+correct).style.border = "2px solid #28a745";
+        }
+    }
+
+    function nextQuestion() {
+        currentIdx++;
+        if (currentIdx < questions.length) {
+            loadQuestion();
+        } else {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('total-score').innerText = score + "/10";
+        }
+    }
+
+    // Nạp giọng nói
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+    loadQuestion();
+</script>
+</body>
+</html>
